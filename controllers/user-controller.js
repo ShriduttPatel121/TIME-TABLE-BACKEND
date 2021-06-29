@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 const Slot = require("../models/Slot");
+const ClassRoom = require("../models/ClassRoom");
 const HttpError = require("../models/http-error");
 
 const login = async (req, res, next) => {
@@ -124,7 +125,7 @@ const getAvailableSoltOfDay = async (req, res, next) => {
   let message = "slots are available";
   try {
     occupiedSlots = await Slot.find({classRoom: classRoom, professor: professor, day: day}).select('slotNumber -_id').exec();
-    console.log(occupiedSlots);
+
     // to not push slot numbers which are already occupied
     for(let i = 0; i <=5; i++) {
       if (!(occupiedSlots.findIndex(oc => oc.slotNumber === i) > -1)) {
@@ -136,13 +137,37 @@ const getAvailableSoltOfDay = async (req, res, next) => {
       message = "slots are not available";
     }
 
-    res.status(201).json({message, availableSlots});
+    res.status(200).json({message, availableSlots});
   } catch (e) {
     return next(new HttpError("somthing went wrong", 500));
   }
 }
 
+// returns all the professors which are not exceeding their working hours for a week
+const availableProfessorForWeek = async (req, res, next) => {
+  try {
+
+    const professors = await User.find({totalWeekHours: {$lt: 18}, role: "professor"}).select('name').exec();
+    res.status(200).json({professors});
+
+  } catch (e) {
+    return next(new HttpError("somthing went wrong", 500));
+  }
+}
+
+const availableClassRoomForWeek = async (req, res, next) => {
+  try {
+
+    const classRooms = await ClassRoom.find({totalWeekHours: {$lt: 25}}).select('name').exec();
+    res.status(200).json({classRooms});
+
+  } catch (e) {
+    return next(new HttpError("somthing went wrong", 500));
+  }
+}
 
 exports.login = login;
 exports.addUser = addUser;
 exports.getAvailableSoltOfDay = getAvailableSoltOfDay;
+exports.availableProfessorForWeek = availableProfessorForWeek;
+exports.availableClassRoomForWeek = availableClassRoomForWeek;
