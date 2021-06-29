@@ -123,6 +123,17 @@ const getAvailableSoltOfDay = async (req, res, next) => {
   let availableSlots = [];
   let occupiedSlots = [];
   let message = "slots are available";
+
+  //if we receive more than 4 slots we can not give back the available slots for this professor due to test condition of 4hr a day for professor
+  try {
+    let currentDayLecs = await Slot.find({classRoom: classRoom, professor: professor, day: day}).count().exec();
+    if (currentDayLecs >= 4) {
+      return next(new HttpError('this professor already has 4 or more lectures for this day', 400));
+    }
+  } catch (e) {
+    return next(new HttpError("somthing went wrong", 500));
+  }
+
   try {
     occupiedSlots = await Slot.find({classRoom: classRoom, professor: professor, day: day}).select('slotNumber -_id').exec();
 
