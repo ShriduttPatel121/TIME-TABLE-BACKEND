@@ -37,7 +37,7 @@ const login = async (req, res, next) => {
       {
         userId: existingUser.id,
         name: existingUser.name,
-        type: existingUser.type
+        type: existingUser.role
       },
       "TOKEN SECRET KEY DO NOT SHARE",
       { expiresIn: "1h" }
@@ -59,10 +59,15 @@ const login = async (req, res, next) => {
 // to add professor
 const addUser = async (req, res, next) => {
 
-    const type = req.userData.type;
+    let type;
+    if (req.userData) {
+        type = req.userData.type;
+    } else {
+        return next(new HttpError('You are not allowed to create users', 403));
+    }
 
     // check the user type of admin from the token
-    if (type && type.toUpperCase() !== "ADMIN") {
+    if (type.toUpperCase() !== "ADMIN") {
         return next(new HttpError('You are not allowed to create users', 403));
     }
 
@@ -70,6 +75,7 @@ const addUser = async (req, res, next) => {
     const userType = req.body.type;
     const password = req.body.password; // password can be hashed with bycrypt
     const userName = req.body.userName;
+    const classRoom = req.body.classRoom;
 
     let existingUser;
     try {
@@ -87,6 +93,7 @@ const addUser = async (req, res, next) => {
         userName,
         role: userType,
         password,
+        classRoom
     });
 
     try {
