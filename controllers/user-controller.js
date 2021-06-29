@@ -155,6 +155,7 @@ const availableProfessorForWeek = async (req, res, next) => {
   }
 }
 
+// returns all the class rooms which are not exceeding their working hours for a week
 const availableClassRoomForWeek = async (req, res, next) => {
   try {
 
