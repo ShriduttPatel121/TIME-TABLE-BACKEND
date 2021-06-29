@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
 const HttpError = require('./models/http-error');
+const adminRoutes = require('./routes/admin-routes');
+const authRoutes = require('./routes/auth-routes');
 
 const app = express();
 
@@ -19,6 +21,9 @@ app.use((req, res, next) => {
 });
 
 //routes will be here
+
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 // if no route found, send 404 not found response

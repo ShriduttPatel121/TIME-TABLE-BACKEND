@@ -8,6 +8,11 @@ const userSchema = new Schema({
         type: String,
         required : true
     },
+
+    userName: {
+        type: String,
+        required: true
+    },
     // 3 types ==> student, professor, admin(who can only add professor and assign the professor to a lecture(slot))
     role: {
         type: String,
