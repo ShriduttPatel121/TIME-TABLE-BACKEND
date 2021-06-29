@@ -91,6 +91,7 @@ const assignLecture = async (req, res, next) => {
     res.status(201).json({message: "Lecture assigned successfully."});
 }
 
+// it will give you current day's lectures for student or professor
 const getTodayLectures = async (req, res, next) => {
     const userType = req.params.userType;
     const userId = req.params.userId;
@@ -122,7 +123,7 @@ const getTodayLectures = async (req, res, next) => {
         return next(new HttpError('invalid user role found in request parameters', 406))
     }
 }
-
+// it will give you a 5 * 6 2d array for week's lectures. for student or professor
 const getWeekLectures = async (req, res, next) => {
     const userType = req.params.userType;
     const userId = req.params.userId;

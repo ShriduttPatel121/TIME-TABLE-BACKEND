@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const Slot = require("../models/Slot");
 const HttpError = require("../models/http-error");
 
 const login = async (req, res, next) => {
@@ -109,6 +110,39 @@ const addUser = async (req, res, next) => {
     res.status(201).json({message: "User was created successfully."});
 };
 
+// to fetch the available slot(in terms of the order number) for the particular day, class room and professor.( this will be triggered when admin user will check for the slot avaibility for prof, class and day, in order to assign the lecture to prof)
+const getAvailableSoltOfDay = async (req, res, next) => { 
+  const professor = req.params.professorId; 
+  const classRoom = req.params.classRoomId;
+  const day = req.params.day;
+
+  if (!professor || !classRoom || !day) {
+    return next( new HttpError('professor id, class room id or day was not found in request parameters', 406));
+  }
+  let availableSlots = [];
+  let occupiedSlots = [];
+  let message = "slots are available";
+  try {
+    occupiedSlots = await Slot.find({classRoom: classRoom, professor: professor, day: day}).select('slotNumber -_id').exec();
+    console.log(occupiedSlots);
+    // to not push slot numbers which are already occupied
+    for(let i = 0; i <=5; i++) {
+      if (!(occupiedSlots.findIndex(oc => oc.slotNumber === i) > -1)) {
+        availableSlots.push(i);
+      }
+    }
+
+    if(availableSlots.length === 0) {
+      message = "slots are not available";
+    }
+
+    res.status(201).json({message, availableSlots});
+  } catch (e) {
+    return next(new HttpError("somthing went wrong", 500));
+  }
+}
+
 
 exports.login = login;
 exports.addUser = addUser;
+exports.getAvailableSoltOfDay = getAvailableSoltOfDay;
