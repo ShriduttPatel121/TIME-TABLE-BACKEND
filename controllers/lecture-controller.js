@@ -3,6 +3,16 @@ const User = require('../models/User');
 const Slot = require('../models/Slot');
 const HttpError = require("../models/http-error");
 
+// a utility method to generate an array of lecture which surly has length of 6, to determin which lecture is at what order number.
+const generateAryOfDayLec = (lectures) => {
+    let result = [null, null, null, null, null, null];  // a day can have 6 lectures, and null signifies no lecture for this particular slot(period) at that index.
+
+    for (let lec of lectures) {
+        result[lec.slotNumber] = lec
+    }
+
+    return result;
+}
 
 // to add a class in db
 const addClass = async (req, res, next) => {
@@ -91,6 +101,7 @@ const getTodayLectures = async (req, res, next) => {
         return next(new HttpError('user role or id not found in request parameters', 406));
     }
     let lectures = [];
+    let preparedLecs;
     // if today is sunday or saturday then retun empty list of lectures
     if (day === 0 || day === 6) {
         return res.status(200).json({lectures});
@@ -98,13 +109,47 @@ const getTodayLectures = async (req, res, next) => {
     
     if (userType.toUpperCase() === 'STUDENT') {
         const student = await User.findById(userId);
-        console.log(student.classRoom);
         lectures = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').exec();
-        return res.status(200).json({lectures});
+        preparedLecs = generateAryOfDayLec(lectures);
+        return res.status(200).json({lectures: preparedLecs});
 
     } else if(userType.toUpperCase() === 'PROFESSOR') {
-        lectures = await Slot.find({day: 1, professor: userId}).populate('classRoom', 'name').exec();
-        return res.status(200).json({ lectures });
+        lectures = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').exec();
+        preparedLecs = generateAryOfDayLec(lectures);
+        return res.status(200).json({ lectures: preparedLecs });
+
+    } else {
+        return next(new HttpError('invalid user role found in request parameters', 406))
+    }
+}
+
+const getWeekLectures = async (req, res, next) => {
+    const userType = req.params.userType;
+    const userId = req.params.userId;
+
+    if (!userType || !userId) {
+        return next(new HttpError('user role or id not found in request parameters', 406));
+    }
+
+    // weekArray will be a 2d array where each element will contain an array of particular day's lectures
+    const weekArray = [];
+    // placeHolder var
+    placeHolder = []
+
+    if (userType.toUpperCase() === 'STUDENT') {
+        const student = await User.findById(userId);
+        for(day = 1; day <= 5; day++) {
+            placeHolder = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').exec();
+            weekArray.push(generateAryOfDayLec(placeHolder))
+        }
+        return res.status(200).json({lectures: weekArray});
+
+    } else if(userType.toUpperCase() === 'PROFESSOR') {
+        for(day = 1; day <= 5; day++) {
+            placeHolder = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').exec();
+            weekArray.push(generateAryOfDayLec(placeHolder))
+        }
+        return res.status(200).json({lectures: weekArray});
 
     } else {
         return next(new HttpError('invalid user role found in request parameters', 406))
@@ -115,4 +160,5 @@ const getTodayLectures = async (req, res, next) => {
 exports.addClass = addClass;
 exports.assignLecture = assignLecture;
 exports.getTodayLecture = getTodayLectures;
+exports.getWeekLectures = getWeekLectures;
 
