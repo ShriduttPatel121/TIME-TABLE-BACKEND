@@ -81,6 +81,38 @@ const assignLecture = async (req, res, next) => {
     res.status(201).json({message: "Lecture assigned successfully."});
 }
 
+const getTodayLectures = async (req, res, next) => {
+    const userType = req.params.userType;
+    const userId = req.params.userId;
+
+    const day = new Date().getDay();
+
+    if (!userType || !userId) {
+        return next(new HttpError('user role or id not found in request parameters', 406));
+    }
+    let lectures = [];
+    // if today is sunday or saturday then retun empty list of lectures
+    if (day === 0 || day === 6) {
+        return res.status(200).json({lectures});
+    }
+    
+    if (userType.toUpperCase() === 'STUDENT') {
+        const student = await User.findById(userId);
+        console.log(student.classRoom);
+        lectures = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').exec();
+        return res.status(200).json({lectures});
+
+    } else if(userType.toUpperCase() === 'PROFESSOR') {
+        lectures = await Slot.find({day: 1, professor: userId}).populate('classRoom', 'name').exec();
+        return res.status(200).json({ lectures });
+
+    } else {
+        return next(new HttpError('invalid user role found in request parameters', 406))
+    }
+}
+
+
 exports.addClass = addClass;
 exports.assignLecture = assignLecture;
+exports.getTodayLecture = getTodayLectures;
 
