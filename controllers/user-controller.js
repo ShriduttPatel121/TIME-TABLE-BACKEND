@@ -50,10 +50,10 @@ const login = async (req, res, next) => {
     );
   }
 
-  res.json({
+  res.status(200).json({
     message: 'Logged in!',
     userId: existingUser.id,
-    email: existingUser.email,
+    type: existingUser.role,
     token: token
   });
 };
