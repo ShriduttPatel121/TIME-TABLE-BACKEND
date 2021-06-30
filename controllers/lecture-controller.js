@@ -110,12 +110,12 @@ const getTodayLectures = async (req, res, next) => {
     
     if (userType.toUpperCase() === 'STUDENT') {
         const student = await User.findById(userId);
-        lectures = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').exec();
+        lectures = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').sort({slotNumber: 1}).exec();
         preparedLecs = generateAryOfDayLec(lectures);
         return res.status(200).json({lectures: preparedLecs});
 
     } else if(userType.toUpperCase() === 'PROFESSOR') {
-        lectures = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').exec();
+        lectures = await Slot.find({day: 1, professor: userId}).populate('classRoom', 'name').sort({slotNumber: 1}).exec();
         preparedLecs = generateAryOfDayLec(lectures);
         return res.status(200).json({ lectures: preparedLecs });
 
@@ -140,14 +140,14 @@ const getWeekLectures = async (req, res, next) => {
     if (userType.toUpperCase() === 'STUDENT') {
         const student = await User.findById(userId);
         for(day = 1; day <= 5; day++) {
-            placeHolder = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').exec();
+            placeHolder = await Slot.find({day: day, classRoom: student.classRoom}).populate('professor', 'name').sort({slotNumber: 1}).exec();
             weekArray.push(generateAryOfDayLec(placeHolder))
         }
         return res.status(200).json({lectures: weekArray});
 
     } else if(userType.toUpperCase() === 'PROFESSOR') {
         for(day = 1; day <= 5; day++) {
-            placeHolder = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').exec();
+            placeHolder = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').sort({slotNumber: 1}).exec();
             weekArray.push(generateAryOfDayLec(placeHolder))
         }
         return res.status(200).json({lectures: weekArray});
