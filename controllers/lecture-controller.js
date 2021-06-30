@@ -105,6 +105,7 @@ const getTodayLectures = async (req, res, next) => {
     let preparedLecs;
     // if today is sunday or saturday then retun empty list of lectures
     if (day === 0 || day === 6) {
+        lectures = [null, null, null, null, null, null];
         return res.status(200).json({lectures});
     }
     
