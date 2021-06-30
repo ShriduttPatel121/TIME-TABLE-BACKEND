@@ -121,26 +121,42 @@ const getAvailableSoltOfDay = async (req, res, next) => {
     return next( new HttpError('professor id, class room id or day was not found in request parameters', 406));
   }
   let availableSlots = [];
-  let occupiedSlots = [];
+  
   let message = "slots are available";
 
-  //if we receive more than 4 slots we can not give back the available slots for this professor due to test condition of 4hr a day for professor
+  let professorOccupiedLec = [];  // to find assigned lectures for a professor for a particular day
   try {
-    let currentDayLecs = await Slot.find({classRoom: classRoom, professor: professor, day: day}).count().exec();
-    if (currentDayLecs >= 4) {
+    professorOccupiedLec = await Slot.find({ professor: professor, day: day}).select('slotNumber -_id').exec();
+    //if we receive more than 4 slots we can not give back the available slots for this professor due to test condition of 4hr a day for professor
+    if (professorOccupiedLec.length >= 4) {
       return next(new HttpError('this professor already has 4 or more lectures for this day', 400));
     }
+
   } catch (e) {
     return next(new HttpError("somthing went wrong", 500));
   }
 
+  let occupiedSlots = [];  // to find the assigned solts to the class for a particular day
   try {
-    occupiedSlots = await Slot.find({classRoom: classRoom, professor: professor, day: day}).select('slotNumber -_id').exec();
+    occupiedSlots = await Slot.find({classRoom: classRoom, day: day}).select('slotNumber -_id').exec();
+    //A Class can have maximum 6 hours a day
+    if (occupiedSlots.length >= 6) {
+      return next(new HttpError('this class room is fully occupied for this day', 400));
+    }
 
     // to not push slot numbers which are already occupied
     for(let i = 0; i <=5; i++) {
       if (!(occupiedSlots.findIndex(oc => oc.slotNumber === i) > -1)) {
         availableSlots.push(i);
+      }
+    }
+
+    // remove those solts from availableSlots where professor is already occupied at some slot of a class room
+    for(let x = 0; x < professorOccupiedLec.length; x++) {
+      let occupiedSlotByProf = professorOccupiedLec[x].slotNumber;
+      let index = availableSlots.findIndex(a => a === occupiedSlotByProf);
+      if (index > -1) {
+        availableSlots.splice(index, 1);
       }
     }
 
