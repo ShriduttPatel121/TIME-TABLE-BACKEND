@@ -195,8 +195,34 @@ const availableClassRoomForWeek = async (req, res, next) => {
   }
 }
 
+// to fetch all the professors with their lectures
+const fetchAllProWithLectures = async (req, res, next) => {
+
+  const result = [];
+  let professors = [];
+  // to get all the professors
+  try {
+    professors = await User.find({role: "professor"}).select("name userName").exec();
+
+    for (let prof of professors) {
+      let lec = await Slot.find({professor: prof._id}).populate('classRoom').sort({'day': 1, slotNumber: 1}).exec();
+
+      let placeHolder = {
+        professor: prof,
+        lectures: lec
+      }
+      result.push(placeHolder);
+    }
+    res.status(200).json({result: result});
+  } catch (e) {
+    console.log(e);
+    return next(new HttpError("something went wrong while fetching professor or lectures", 500));
+  }
+}
+
 exports.login = login;
 exports.addUser = addUser;
 exports.getAvailableSoltOfDay = getAvailableSoltOfDay;
 exports.availableProfessorForWeek = availableProfessorForWeek;
 exports.availableClassRoomForWeek = availableClassRoomForWeek;
+exports.fetchAllProWithLectures = fetchAllProWithLectures;
