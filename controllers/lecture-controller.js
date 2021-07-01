@@ -116,7 +116,7 @@ const getTodayLectures = async (req, res, next) => {
         return res.status(200).json({lectures: preparedLecs});
 
     } else if(userType.toUpperCase() === 'PROFESSOR') {
-        lectures = await Slot.find({day: 1, professor: userId}).populate('classRoom', 'name').sort({slotNumber: 1}).exec();
+        lectures = await Slot.find({day: day, professor: userId}).populate('classRoom', 'name').sort({slotNumber: 1}).exec();
         preparedLecs = generateAryOfDayLec(lectures);
         return res.status(200).json({ lectures: preparedLecs });
 
