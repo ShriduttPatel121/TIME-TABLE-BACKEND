@@ -6,7 +6,10 @@ const checkAuth = require('../middlewares/auth');
 
 const router = express.Router();
 
+
 router.use(checkAuth);
+
+router.get("/fetchAllProWithLectures", userController.fetchAllProWithLectures);
 
 router.post('/addUser', userController.addUser);
 
