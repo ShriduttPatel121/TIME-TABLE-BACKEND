@@ -54,6 +54,7 @@ const login = async (req, res, next) => {
     message: 'Logged in!',
     userId: existingUser.id,
     type: existingUser.role,
+    name: existingUser.name,
     token: token
   });
 };
